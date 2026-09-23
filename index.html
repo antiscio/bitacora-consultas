@@ -30,6 +30,7 @@
         <span><strong>Procesando</strong><small id="busyText">una consulta</small></span>
       </a>
       <div class="side-foot">
+        <p id="cloudSide" class="cloud-side" hidden></p>
         <button class="side-btn" type="button" data-open-settings>
           <i data-icon="settings"></i><span>Configuración</span><span id="keyDot" class="dot" title=""></span>
         </button>
@@ -219,6 +220,44 @@
         <input id="setName" type="text" placeholder="Astróloga" />
       </label>
 
+      <section class="cloud-box" id="cloudBox">
+        <div class="cloud-head">
+          <i data-icon="cloud" data-size="22"></i>
+          <div>
+            <strong>Biblioteca en la nube</strong>
+            <p class="hint" id="cloudState">Para usar la biblioteca en la compu y en el celular.</p>
+          </div>
+        </div>
+        <div id="cloudOff">
+          <p class="hint">Se guarda <strong>encriptada</strong> en un repositorio privado de GitHub: solo se puede leer desde tus dispositivos vinculados. Si ya está conectada en otra compu, no completes esto: escaneá con este dispositivo el código QR de allá.</p>
+          <label class="field">Repositorio de datos
+            <input id="cloudRepo" type="text" autocomplete="off" placeholder="usuario/bitacora-datos" />
+          </label>
+          <label class="field">Permiso de GitHub (token)
+            <input id="cloudToken" type="password" autocomplete="off" placeholder="github_pat_…" />
+          </label>
+          <details class="more">
+            <summary>Cómo conseguir el permiso</summary>
+            <ol class="hint steps-list">
+              <li>Entrá a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com → Fine-grained token</a>.</li>
+              <li>Nombre: "Bitácora". Vencimiento: el más largo que permita.</li>
+              <li>Repository access → <strong>Only select repositories</strong> → elegí el repositorio de datos.</li>
+              <li>Permissions → Repository permissions → <strong>Contents: Read and write</strong>.</li>
+              <li>Generate token, copialo y pegalo acá.</li>
+            </ol>
+          </details>
+          <button class="btn sm primary" type="button" id="btnCloudConnect"><i data-icon="cloud" data-size="16"></i> Conectar</button>
+          <p id="cloudError" class="error" hidden></p>
+        </div>
+        <div id="cloudOn" hidden>
+          <div class="row">
+            <button class="btn sm" type="button" id="btnCloudSync"><i data-icon="refresh" data-size="16"></i> Sincronizar ahora</button>
+            <button class="btn sm primary" type="button" id="btnCloudLink"><i data-icon="phone" data-size="16"></i> Vincular celular</button>
+          </div>
+          <button class="btn sm danger-ghost" type="button" id="btnCloudOff">Desconectar este dispositivo</button>
+        </div>
+      </section>
+
       <details class="more">
         <summary>Respaldo de la biblioteca</summary>
         <p class="hint">La biblioteca vive en este navegador. Descargá un respaldo de vez en cuando (por ejemplo a Google Drive) y usalo para recuperarla o pasarla a otra compu.</p>
@@ -247,6 +286,22 @@
         <button class="btn primary" value="save">Guardar</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="linkDialog">
+    <div class="form">
+      <div class="dialog-head">
+        <h3>Vincular el celular</h3>
+        <button class="icon-btn sm" type="button" data-close-dialog aria-label="Cerrar"><i data-icon="x" data-size="18"></i></button>
+      </div>
+      <p class="hint">Abrí la cámara del celular y apuntá a este código. Se abre la Bitácora ya conectada a la biblioteca y con la clave de Groq. Se hace una sola vez.</p>
+      <div id="qrBox" class="qr-box"></div>
+      <div class="key-row">
+        <input id="linkText" type="text" readonly />
+        <button class="btn" type="button" id="btnCopyLink">Copiar</button>
+      </div>
+      <p class="warn">Este código da acceso a toda la biblioteca: no lo compartas ni lo mandes por chat a otras personas.</p>
+    </div>
   </dialog>
 
   <script type="module" src="js/app.js"></script>

@@ -1,8 +1,11 @@
 // Biblioteca de consultas guardada en el navegador (IndexedDB).
 // No se guardan los audios: solo la transcripción y el análisis.
+// Si la biblioteca en la nube está conectada (cloud.js), cada cambio avisa con el
+// evento "bitacora:cambio" para que se suba, y los borrados quedan anotados para
+// borrarlos también allá.
 
 const DB_NAME = 'bitacora';
-const VERSION = 1;
+const VERSION = 2;
 let dbPromise = null;
 
 function open() {
@@ -15,6 +18,8 @@ function open() {
         if (!db.objectStoreNames.contains('sessions')) {
           db.createObjectStore('sessions', { keyPath: 'id' }).createIndex('patientId', 'patientId');
         }
+        // Estado de la sincronización: qué versión de cada archivo hay en la nube.
+        if (!db.objectStoreNames.contains('sync')) db.createObjectStore('sync', { keyPath: 'path' });
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -41,6 +46,27 @@ async function put(name, obj) {
     tx.oncomplete = () => resolve(obj);
     tx.onerror = () => reject(tx.error);
   });
+}
+
+const changed = () => window.dispatchEvent(new CustomEvent('bitacora:cambio'));
+
+// Ruta del archivo de cada registro en la nube.
+export const pathOf = (storeName, id) => `datos/${storeName}/${id}.json`;
+
+// Borra registros y anota el borrado para la nube.
+async function removeRecords(items) {
+  const db = await open();
+  const syncEntries = await Promise.all(items.map(async ([s, id]) => done((await store('sync')).get(pathOf(s, id)))));
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(['patients', 'sessions', 'sync'], 'readwrite');
+    items.forEach(([s, id], i) => {
+      tx.objectStore(s).delete(id);
+      if (syncEntries[i]) tx.objectStore('sync').put({ ...syncEntries[i], pendingDelete: true });
+    });
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+  changed();
 }
 
 export const normName = (s) =>
@@ -74,7 +100,9 @@ export async function findPatientByName(name) {
 }
 
 export async function savePatient(p) {
-  return put('patients', { ...p, updatedAt: Date.now() });
+  const saved = await put('patients', { ...p, updatedAt: Date.now() });
+  changed();
+  return saved;
 }
 
 export async function findOrCreatePatient(name, { birth } = {}) {
@@ -83,20 +111,15 @@ export async function findOrCreatePatient(name, { birth } = {}) {
     p = { id: crypto.randomUUID(), name: name.trim(), birth: birth || '', notes: '', createdAt: Date.now() };
   } else if (birth && !p.birth) {
     p.birth = birth;
+  } else {
+    return p;
   }
   return savePatient(p);
 }
 
 export async function deletePatient(id) {
-  const db = await open();
   const sessions = await sessionsOf(id);
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(['patients', 'sessions'], 'readwrite');
-    tx.objectStore('patients').delete(id);
-    for (const s of sessions) tx.objectStore('sessions').delete(s.id);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
+  await removeRecords([['patients', id], ...sessions.map((s) => ['sessions', s.id])]);
 }
 
 // ---------- Consultas ----------
@@ -114,14 +137,28 @@ export async function getSession(id) {
 }
 
 export async function saveSession(s) {
-  return put('sessions', { ...s, updatedAt: Date.now() });
+  const saved = await put('sessions', { ...s, updatedAt: Date.now() });
+  changed();
+  return saved;
 }
 
 export async function deleteSession(id) {
+  await removeRecords([['sessions', id]]);
+}
+
+// ---------- Acceso directo para la sincronización (no avisa cambios) ----------
+export async function getAllRaw(storeName) {
+  return done((await store(storeName)).getAll());
+}
+export async function getRaw(storeName, id) {
+  return done((await store(storeName)).get(id));
+}
+export const putRaw = (storeName, obj) => put(storeName, obj);
+export async function deleteRaw(storeName, id) {
   const db = await open();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction('sessions', 'readwrite');
-    tx.objectStore('sessions').delete(id);
+    const tx = db.transaction(storeName, 'readwrite');
+    tx.objectStore(storeName).delete(id);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
@@ -145,6 +182,7 @@ export async function importAll(data) {
     tx.oncomplete = resolve;
     tx.onerror = () => reject(tx.error);
   });
+  changed();
   return { patients: data.patients.length, sessions: data.sessions.length };
 }
 

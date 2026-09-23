@@ -676,6 +676,22 @@ dialog.confirm p { margin: 0; }
 .toast.out { opacity: 0; transform: translateY(6px); transition: all 0.3s; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
 
+/* ---------- Biblioteca en la nube ---------- */
+.cloud-box { border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: var(--surface-2); display: flex; flex-direction: column; gap: 12px; }
+.cloud-head { display: flex; gap: 12px; align-items: flex-start; }
+.cloud-head > .icon { color: var(--accent); margin-top: 2px; }
+.cloud-head p { margin: 2px 0 0; }
+#cloudOff, #cloudOn { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+#cloudOff .field { width: 100%; }
+#cloudOff p { margin: 0; }
+.steps-list { padding-left: 20px; margin: 0; }
+.steps-list li { margin: 4px 0; }
+.cloud-side { margin: 0 0 6px; padding: 0 14px; font-size: 0.78rem; color: var(--night-muted); }
+.cloud-side::before { content: "☁ "; }
+.cloud-side.bad { color: #ffb4a8; }
+.qr-box { display: grid; place-items: center; background: #fff; border-radius: 14px; padding: 10px; min-height: 120px; color: #555; font-size: 0.9rem; text-align: center; }
+.qr-box svg { width: min(280px, 70vw); height: auto; }
+
 /* ---------- Ayuda ---------- */
 .help { display: grid; gap: 12px; }
 .help .card { padding: 16px 20px; }

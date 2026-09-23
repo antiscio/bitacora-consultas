@@ -1,8 +1,9 @@
-// Configuración (clave de Groq, nombres, modelos) y respaldo de la biblioteca.
+// Configuración (clave de Groq, nombres, modelos), biblioteca en la nube y respaldo.
 
 import { $, prefs, toast, download } from './ui.js';
 import { GroqClient } from './groq.js';
 import { exportAll, importAll } from './db.js';
+import { getCloud, connect, disconnect, sync, linkUrl, cloudStatus, startAutoSync } from './cloud.js';
 
 const KEY = 'bitacora.settings';
 const DEFAULTS = { groqKey: '', name: 'Astróloga', zoomName: '', stt: 'whisper-large-v3', llm: 'openai/gpt-oss-120b' };
@@ -12,6 +13,56 @@ const listeners = new Set();
 
 export const getSettings = () => settings;
 export const onSettingsChange = (fn) => listeners.add(fn);
+
+export function updateSettings(patch) {
+  settings = { ...settings, ...patch };
+  prefs.set(KEY, settings);
+  listeners.forEach((fn) => fn(settings));
+}
+
+// ---------- Biblioteca en la nube ----------
+function ago(t) {
+  if (!t) return '';
+  const m = Math.round((Date.now() - t) / 60000);
+  return m < 1 ? 'recién' : m < 60 ? `hace ${m} min` : `hace ${Math.round(m / 60)} h`;
+}
+
+export function refreshCloudUi() {
+  const c = getCloud();
+  const st = cloudStatus();
+  $('cloudOff').hidden = !!c;
+  $('cloudOn').hidden = !c;
+  const text = !c
+    ? 'Para usar la biblioteca en la compu y en el celular.'
+    : st.state === 'sync'
+      ? `Conectada a ${c.repo} · sincronizando…`
+      : st.state === 'error' || st.state === 'offline'
+        ? `Conectada a ${c.repo} · ${st.message}`
+        : `Conectada a ${c.repo}${st.at ? ' · sincronizada ' + ago(st.at) : ''}`;
+  $('cloudState').textContent = text;
+  $('cloudState').className = 'hint' + (st.state === 'error' ? ' bad' : c ? ' ok' : '');
+  const side = $('cloudSide');
+  side.hidden = !c;
+  side.textContent = st.state === 'sync' ? 'Sincronizando…' : st.state === 'error' ? 'Error al sincronizar' : st.state === 'offline' ? 'Sin conexión' : st.at ? `En la nube · ${ago(st.at)}` : 'En la nube';
+  side.classList.toggle('bad', st.state === 'error');
+}
+
+async function showLinkQr() {
+  const url = linkUrl(settings.groqKey);
+  $('linkText').value = url;
+  const box = $('qrBox');
+  box.textContent = 'Generando código…';
+  $('linkDialog').showModal();
+  try {
+    const { default: qrcode } = await import('https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/+esm');
+    const qr = qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    box.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 2, scalable: true });
+  } catch {
+    box.textContent = 'No se pudo dibujar el código. Copiá el enlace y abrilo en el celular.';
+  }
+}
 
 export function openSettings() {
   $('setKey').value = settings.groqKey;
@@ -72,6 +123,43 @@ export function initSettings() {
     listeners.forEach((fn) => fn(settings));
     toast('Configuración guardada');
   });
+
+  $('btnCloudConnect').addEventListener('click', async () => {
+    const err = $('cloudError');
+    err.hidden = true;
+    const btn = $('btnCloudConnect');
+    btn.disabled = true;
+    try {
+      await connect({ repo: $('cloudRepo').value, token: $('cloudToken').value });
+      $('cloudToken').value = '';
+      toast('Biblioteca conectada a la nube');
+      refreshCloudUi();
+      startAutoSync();
+    } catch (e) {
+      err.textContent = e.message;
+      err.hidden = false;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  $('btnCloudSync').addEventListener('click', () => sync());
+  $('btnCloudLink').addEventListener('click', showLinkQr);
+  $('btnCopyLink').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText($('linkText').value);
+      toast('Enlace copiado');
+    } catch {
+      $('linkText').select();
+    }
+  });
+  $('btnCloudOff').addEventListener('click', () => {
+    disconnect();
+    refreshCloudUi();
+    toast('Este dispositivo ya no sincroniza (la biblioteca queda guardada acá y en la nube).');
+  });
+  window.addEventListener('bitacora:nube', refreshCloudUi);
+  setInterval(refreshCloudUi, 60000);
+  refreshCloudUi();
 
   $('btnExport').addEventListener('click', async () => {
     const data = await exportAll();

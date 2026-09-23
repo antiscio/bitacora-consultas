@@ -1,7 +1,8 @@
 // Arranque de la app: navegación entre pantallas y configuración.
 
-import { $, hydrateIcons } from './ui.js';
-import { initSettings, getSettings, onSettingsChange } from './settings.js';
+import { $, hydrateIcons, toast } from './ui.js';
+import { initSettings, getSettings, onSettingsChange, updateSettings, refreshCloudUi } from './settings.js';
+import { getCloud, connect, readLink, startAutoSync } from './cloud.js';
 import { askPersistence } from './db.js';
 import { initNueva, refreshPatientNames, renderHome } from './views/nueva.js';
 import { renderBiblioteca, renderConsultante } from './views/biblioteca.js';
@@ -41,10 +42,31 @@ function refreshKeyState() {
   $('keyDot').title = hasKey ? 'Clave de Groq cargada' : 'Falta la clave de Groq';
 }
 
+// Si se abrió desde el código QR de "Vincular celular", conectar este dispositivo.
+async function linkFromUrl() {
+  const link = readLink(location.hash);
+  if (!link) return;
+  history.replaceState(null, '', location.pathname + '#/nueva');
+  try {
+    await connect({ repo: link.repo, token: link.token, key: link.key });
+    if (link.groqKey && !getSettings().groqKey) updateSettings({ groqKey: link.groqKey });
+    toast('Listo: este dispositivo quedó vinculado a la biblioteca');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
 hydrateIcons();
 initSettings();
 initNueva();
 refreshKeyState();
+await linkFromUrl();
+refreshCloudUi();
+if (getCloud()) startAutoSync();
+window.addEventListener('bitacora:datos', () => {
+  // Llegaron cambios de otro dispositivo: refrescar, salvo que se esté escribiendo.
+  if (!['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) route();
+});
 onSettingsChange(() => {
   refreshKeyState();
   refreshPatientNames();

@@ -67,6 +67,15 @@ Una consulta de 1 h 20 min usa aprox. 1 h 20 min de audio y unos 50 a 60 mil tok
 4. La app queda en `https://USUARIO.github.io/bitacora-consultas/`.
 5. En el celular, abrir ese link en Chrome → menú → **Agregar a pantalla principal**.
 
+### 4. Biblioteca en la nube (compu y celular)
+La biblioteca se puede sincronizar con un **repositorio privado de GitHub solo de datos** (ej. `antiscio/bitacora-datos`). Todo se **encripta en el navegador** (AES-GCM de 256 bits) antes de subirse: en GitHub solo quedan archivos ilegibles con nombres al azar. La llave vive únicamente en los dispositivos vinculados.
+
+1. Crear un permiso ("fine-grained token") en <https://github.com/settings/personal-access-tokens/new>: acceso **solo** al repositorio de datos, permiso **Contents: Read and write**, vencimiento lo más largo posible.
+2. En la app: **Configuración → Biblioteca en la nube** → repositorio + permiso → **Conectar**.
+3. Para el celular: **Vincular celular** muestra un código QR. Se escanea con la cámara del celular y la app queda conectada (incluye la clave de Groq). Se hace una sola vez por dispositivo.
+
+Sincroniza sola al abrir la app, al volver a ella, cada 5 minutos y después de cada cambio. Si se edita lo mismo en dos dispositivos, gana la versión más reciente.
+
 ## Probar en la computadora
 
 Hace falta un servidor local (los módulos JS no funcionan abriendo el archivo directo):
@@ -87,6 +96,7 @@ y abrir <http://localhost:8765>.
 | `js/views/biblioteca.js` | Biblioteca, búsqueda y ficha de cada consultante |
 | `js/views/sesion.js` | Consulta guardada: resumen, tránsitos y fechas, transcripción, notas, descargas |
 | `js/db.js` | Biblioteca en IndexedDB y respaldo |
+| `js/cloud.js` | Biblioteca en la nube: encriptación y sincronización con un repositorio privado |
 | `js/settings.js` | Configuración (clave, nombres, modelos) |
 | `js/ui.js` | Utilidades de interfaz (íconos, fechas, avisos) |
 | `js/files.js` | Recibe carpetas/archivos y adivina orden y voces |
@@ -104,7 +114,7 @@ Los audios y transcripciones pasan por los servidores de Groq para ser procesado
 
 ## Ideas para más adelante
 
-- Sincronizar la biblioteca entre compu y celular: guardar en una carpeta de Google Drive desde la compu, o una base en la nube gratis (Supabase o Firebase) con inicio de sesión.
+
 - Resumen de evolución entre consultas de un mismo consultante.
 - Calcular los tránsitos reales con efemérides para verificar las fechas.
 - Cambiar el análisis a Claude (pago por uso) si se quiere más calidad.
