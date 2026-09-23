@@ -1,0 +1,14 @@
+# Nunca subir grabaciones ni informes de consultas
+*.m4a
+*.mp3
+*.mp4
+*.wav
+*.webm
+*.docx
+*.txt
+Zoom/
+.claude/settings.local.json
+
+# Archivos de prueba locales
+_prueba/
+test-audio/

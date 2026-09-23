@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Bitácora de Consultas</title>
+  <meta name="description" content="Transcribe, resume y guarda consultas astrológicas: puntos clave, situación del consultante, astrología y fechas." />
+  <meta name="theme-color" content="#1b1540" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <!-- Barra lateral (computadora) -->
+    <aside class="sidebar night">
+      <a class="brand" href="#/nueva" aria-label="Bitácora de Consultas, inicio">
+        <img src="icon.svg" alt="" width="40" height="40" />
+        <span><strong>Bitácora</strong><small>de consultas</small></span>
+      </a>
+      <nav class="side-nav" aria-label="Secciones">
+        <a href="#/nueva" data-nav="nueva"><i data-icon="sparkles"></i><span>Inicio</span></a>
+        <a href="#/biblioteca" data-nav="biblioteca"><i data-icon="book"></i><span>Biblioteca</span></a>
+      </nav>
+      <a id="busyCard" class="busy-card" href="#/nueva" hidden>
+        <span class="spinner sm light"></span>
+        <span><strong>Procesando</strong><small id="busyText">una consulta</small></span>
+      </a>
+      <div class="side-foot">
+        <button class="side-btn" type="button" data-open-settings>
+          <i data-icon="settings"></i><span>Configuración</span><span id="keyDot" class="dot" title=""></span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Barra superior (celular) -->
+    <header class="topbar night">
+      <a class="brand" href="#/nueva"><img src="icon.svg" alt="" width="30" height="30" /><strong>Bitácora</strong></a>
+      <span id="busyMini" class="spinner sm light" hidden></span>
+      <button class="icon-btn light" type="button" aria-label="Configuración" data-open-settings><i data-icon="settings" data-size="20"></i></button>
+    </header>
+
+    <main class="content">
+      <!-- Inicio / nueva consulta -->
+      <section id="view-nueva" class="view">
+        <header class="greeting">
+          <p id="today" class="eyebrow"></p>
+          <h1 id="hello">Hola</h1>
+        </header>
+
+        <div id="setupBanner" class="banner" hidden>
+          <i data-icon="sparkles"></i>
+          <div class="grow"><strong>Falta un paso:</strong> cargá tu clave gratuita de Groq para poder transcribir.</div>
+          <button class="btn primary" type="button" data-open-settings>Configurar</button>
+        </div>
+
+        <div id="newForm">
+          <section class="hero night">
+            <div class="hero-text">
+              <h2>Nueva consulta</h2>
+              <p>Soltá la grabación de Zoom o los audios de WhatsApp. En unos minutos tenés la transcripción, el resumen y toda la astrología que se habló.</p>
+            </div>
+            <div id="dropzone" class="dropzone">
+              <div class="dz-icon"><i data-icon="upload" data-size="24"></i></div>
+              <p class="dz-title">Arrastrá acá el audio o la carpeta de Zoom</p>
+              <p class="dz-sub">m4a · mp3 · ogg · opus · wav. Si la consulta quedó en varios audios, subilos todos juntos.</p>
+              <div class="dz-actions">
+                <button class="btn glass" type="button" id="btnPickFiles"><i data-icon="file"></i> Elegir archivos</button>
+                <button class="btn glass" type="button" id="btnPickFolder"><i data-icon="folder"></i> Elegir carpeta</button>
+              </div>
+              <input id="inputFolder" type="file" webkitdirectory multiple hidden />
+              <input id="inputFiles" type="file" accept="audio/*,video/mp4,.m4a,.mp3,.wav,.webm,.ogg,.opus" multiple hidden />
+            </div>
+            <ul id="fileList" class="file-list" hidden></ul>
+            <p id="fileWarn" class="warn" hidden></p>
+            <details class="recorder" id="recorderBox">
+              <summary><i data-icon="mic"></i> O grabar desde acá</summary>
+              <div class="rec-body">
+                <p class="small">Para consultas presenciales o por otra plataforma. Con Zoom conviene que grabe Zoom.</p>
+                <label class="check" id="captureCallRow">
+                  <input type="checkbox" id="captureCall" />
+                  <span>También grabar el audio de la llamada (elegís la pestaña o pantalla y activás "Compartir audio")</span>
+                </label>
+                <div class="rec-controls">
+                  <button class="btn glass record" type="button" id="btnRec"><span class="rec-dot"></span><span id="btnRecLabel">Empezar a grabar</span></button>
+                  <span id="recTimer" class="timer" hidden>00:00</span>
+                </div>
+                <p id="recError" class="error" hidden></p>
+              </div>
+            </details>
+          </section>
+
+          <section class="card form-card">
+            <div class="grid">
+              <label class="field">Consultante
+                <input id="consultante" type="text" list="patientNames" autocomplete="off" placeholder="Nombre y apellido" />
+              </label>
+              <label class="field">Fecha de la consulta
+                <input id="fecha" type="date" />
+              </label>
+            </div>
+            <datalist id="patientNames"></datalist>
+            <p id="patientHint" class="hint ok" hidden></p>
+            <details class="more">
+              <summary>Datos de nacimiento y notas <span class="muted">(opcional)</span></summary>
+              <div class="grid">
+                <label class="field wide">Datos de nacimiento
+                  <input id="nacimiento" type="text" autocomplete="off" placeholder="Ej.: 14/03/1985, 22:10 h, Rosario" />
+                </label>
+                <label class="field wide">Notas previas
+                  <textarea id="notas" rows="2" placeholder="Ej.: Segunda consulta. Viene por un tema laboral."></textarea>
+                </label>
+              </div>
+            </details>
+            <div class="cta">
+              <div class="grow">
+                <p id="estimate" class="hint"></p>
+                <p id="formError" class="error" hidden></p>
+              </div>
+              <button class="btn primary xl" type="button" id="btnProcess"><i data-icon="sparkles" data-size="20"></i> Transcribir y resumir</button>
+            </div>
+          </section>
+        </div>
+
+        <section id="processing" class="hero night processing" hidden>
+          <div class="proc-head">
+            <span id="procSpinner" class="spinner light"></span>
+            <div>
+              <h2 id="procTitle">Procesando la consulta</h2>
+              <p id="procSub"></p>
+            </div>
+          </div>
+          <div class="bar"><div id="procFill" class="fill"></div></div>
+          <ol id="procSteps" class="steps">
+            <li>Preparando el audio</li>
+            <li>Transcribiendo</li>
+            <li>Analizando la conversación</li>
+            <li>Guardando en la biblioteca</li>
+          </ol>
+          <p id="procDetail" class="small"></p>
+          <p id="procWait" class="wait" hidden></p>
+          <p class="small faint">Podés usar la compu mientras tanto, pero no cierres esta pestaña.</p>
+          <div id="procError" hidden>
+            <p id="procErrorText" class="error"></p>
+            <p id="procSaved" class="small">La transcripción quedó guardada en la biblioteca: no se pierde.</p>
+            <div class="row">
+              <button id="btnProcRetry" class="btn gold" type="button"><i data-icon="refresh"></i> Reintentar</button>
+              <button id="btnProcOpen" class="btn glass" type="button">Ver consulta</button>
+              <button id="btnProcBack" class="btn glass" type="button">Volver</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="recent" class="section" hidden>
+          <div class="section-head">
+            <h2 class="section-title">Últimas consultas</h2>
+            <a href="#/biblioteca" class="link">Ver biblioteca <i data-icon="chevron" data-size="16"></i></a>
+          </div>
+          <div id="recentList" class="recent-grid"></div>
+        </section>
+
+        <section class="section help">
+          <details class="card" id="ayudaZoom">
+            <summary><i data-icon="sparkles"></i> Cómo grabar con Zoom para que salga mejor</summary>
+            <ol>
+              <li><strong>Una sola vez:</strong> en Zoom → Configuración → Grabación, activá <strong>"Grabar un archivo de audio separado para cada participante"</strong>. Así cada voz queda en su propio archivo y la transcripción sale como guion sin errores de quién dijo qué (y el análisis es más rápido).</li>
+              <li>Poné tu nombre de Zoom en Configuración de esta app, para que reconozca tu voz.</li>
+              <li>En cada consulta: <strong>Grabar → Grabar en esta computadora</strong>. Si la reunión se corta a los 40 minutos y la reabrís, volvé a grabar.</li>
+              <li>Al terminar, arrastrá acá la carpeta que abre Zoom (o las carpetas, si fueron varias partes).</li>
+            </ol>
+            <p class="hint">Si Zoom deja un solo audio con las dos voces, la app igual funciona: la IA deduce quién habla por el contexto, con algún error ocasional.</p>
+          </details>
+          <details class="card">
+            <summary><i data-icon="alert"></i> Privacidad</summary>
+            <p>Los audios se procesan en esta computadora y se envían a Groq solo para transcribir y resumir; Groq no los usa para entrenar. La biblioteca (solo texto, sin audios) queda guardada en este navegador. Recordá avisarle al consultante que la sesión se graba.</p>
+          </details>
+        </section>
+      </section>
+
+      <section id="view-biblioteca" class="view" hidden></section>
+      <section id="view-consultante" class="view" hidden></section>
+      <section id="view-sesion" class="view" hidden></section>
+    </main>
+
+    <!-- Navegación inferior (celular) -->
+    <nav class="bottom-nav" aria-label="Secciones">
+      <a href="#/nueva" data-nav="nueva"><i data-icon="sparkles" data-size="20"></i><span>Inicio</span></a>
+      <a href="#/biblioteca" data-nav="biblioteca"><i data-icon="book" data-size="20"></i><span>Biblioteca</span></a>
+    </nav>
+  </div>
+
+  <dialog id="settings">
+    <form method="dialog" class="form">
+      <div class="dialog-head">
+        <h3>Configuración</h3>
+        <button class="icon-btn sm" type="button" data-close-dialog aria-label="Cerrar"><i data-icon="x" data-size="18"></i></button>
+      </div>
+
+      <label class="field">Clave de Groq
+        <div class="key-row">
+          <input id="setKey" type="password" autocomplete="off" placeholder="gsk_…" />
+          <button class="btn" type="button" id="btnShowKey">Ver</button>
+        </div>
+        <span class="hint">Gratis en <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>. Queda guardada solo en este navegador.</span>
+      </label>
+      <div class="key-test">
+        <button class="btn sm" type="button" id="btnTestKey">Probar clave</button>
+        <span id="keyStatus" class="hint"></span>
+      </div>
+
+      <label class="field">Tu nombre
+        <input id="setZoomName" type="text" placeholder="Ej.: Nati" />
+        <span class="hint">Para saludarte y, si Zoom graba un audio por persona, reconocer tu voz.</span>
+      </label>
+      <label class="field">Cómo figurás en la transcripción
+        <input id="setName" type="text" placeholder="Astróloga" />
+      </label>
+
+      <details class="more">
+        <summary>Respaldo de la biblioteca</summary>
+        <p class="hint">La biblioteca vive en este navegador. Descargá un respaldo de vez en cuando (por ejemplo a Google Drive) y usalo para recuperarla o pasarla a otra compu.</p>
+        <div class="row">
+          <button class="btn sm" type="button" id="btnExport"><i data-icon="download" data-size="16"></i> Descargar respaldo</button>
+          <button class="btn sm" type="button" id="btnImport"><i data-icon="archive" data-size="16"></i> Recuperar respaldo</button>
+          <input id="inputImport" type="file" accept=".json,application/json" hidden />
+        </div>
+      </details>
+
+      <details class="more">
+        <summary>Opciones avanzadas</summary>
+        <label class="field">Modelo de transcripción
+          <select id="setStt">
+            <option value="whisper-large-v3">whisper-large-v3 (más preciso)</option>
+            <option value="whisper-large-v3-turbo">whisper-large-v3-turbo (más rápido)</option>
+          </select>
+        </label>
+        <label class="field">Modelo de análisis
+          <input id="setLlm" type="text" />
+        </label>
+      </details>
+
+      <div class="dialog-actions">
+        <button class="btn ghost" value="cancel">Cancelar</button>
+        <button class="btn primary" value="save">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
