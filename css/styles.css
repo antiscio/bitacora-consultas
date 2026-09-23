@@ -676,6 +676,22 @@ dialog.confirm p { margin: 0; }
 .toast.out { opacity: 0; transform: translateY(6px); transition: all 0.3s; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
 
+/* ---------- Candado ---------- */
+.lock { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 24px; overflow-y: auto; }
+.lock-card { width: min(380px, 100%); text-align: center; display: flex; flex-direction: column; align-items: center; }
+.lock-card img { filter: drop-shadow(0 8px 24px rgba(240, 201, 121, 0.25)); }
+.lock-card h1 { color: #fff; font-size: 2.4rem; margin-top: 16px; }
+.lock-sub { margin: 2px 0 0; color: var(--night-muted); letter-spacing: 0.08em; font-size: 0.85rem; }
+.lock-msg { color: #e6e1ff; margin: 26px 0 18px; line-height: 1.55; }
+#lockForm { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+#lockForm input[type="password"] { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.25); color: #fff; text-align: center; font-size: 1.05rem; }
+#lockForm input[type="password"]::placeholder { color: var(--night-muted); }
+#lockForm input:focus { box-shadow: 0 0 0 4px rgba(240, 201, 121, 0.2); border-color: var(--star-gold); }
+#lockForm .check { color: var(--night-muted); text-align: left; font-size: 0.86rem; }
+#lockForm .btn { width: 100%; }
+#lockForm .error { background: rgba(255, 120, 110, 0.16); color: #ffd4cf; }
+.pass-grid { margin: 12px 0; }
+
 /* ---------- Biblioteca en la nube ---------- */
 .cloud-box { border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: var(--surface-2); display: flex; flex-direction: column; gap: 12px; }
 .cloud-head { display: flex; gap: 12px; align-items: flex-start; }

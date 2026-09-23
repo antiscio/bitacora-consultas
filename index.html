@@ -14,7 +14,24 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <div class="shell">
+  <!-- Candado: la app no se muestra sin la clave de acceso -->
+  <div id="lockScreen" class="lock night">
+    <div class="lock-card">
+      <img src="icon.svg" alt="" width="60" height="60" />
+      <h1>Bitácora</h1>
+      <p class="lock-sub">de consultas</p>
+      <p id="lockMsg" class="lock-msg">Cargando…</p>
+      <form id="lockForm" hidden>
+        <input id="lockPass" type="password" autocomplete="current-password" placeholder="Clave de acceso" />
+        <input id="lockPass2" type="password" autocomplete="new-password" placeholder="Repetí la clave" hidden />
+        <label class="check"><input type="checkbox" id="lockRemember" checked /><span>Recordar en este dispositivo por 30 días</span></label>
+        <button class="btn gold xl" type="submit" id="lockBtn">Entrar</button>
+        <p id="lockError" class="error" hidden></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="shell" hidden>
     <!-- Barra lateral (computadora) -->
     <aside class="sidebar night">
       <a class="brand" href="#/nueva" aria-label="Bitácora de Consultas, inicio">
@@ -259,6 +276,19 @@
       </section>
 
       <details class="more">
+        <summary>Clave de acceso</summary>
+        <p class="hint">La app pide esta clave para abrir. Sin ella no se puede entrar ni usar el código de vinculación.</p>
+        <button class="btn sm" type="button" id="btnLockNow"><i data-icon="lock" data-size="16"></i> Bloquear ahora</button>
+        <div class="grid pass-grid">
+          <label class="field wide">Clave actual <input id="passOld" type="password" autocomplete="current-password" /></label>
+          <label class="field">Clave nueva <input id="passNew" type="password" autocomplete="new-password" /></label>
+          <label class="field">Repetir clave nueva <input id="passNew2" type="password" autocomplete="new-password" /></label>
+        </div>
+        <button class="btn sm" type="button" id="btnChangePass">Cambiar clave</button>
+        <p id="passError" class="error" hidden></p>
+      </details>
+
+      <details class="more">
         <summary>Respaldo de la biblioteca</summary>
         <p class="hint">La biblioteca vive en este navegador. Descargá un respaldo de vez en cuando (por ejemplo a Google Drive) y usalo para recuperarla o pasarla a otra compu.</p>
         <div class="row">
@@ -294,13 +324,13 @@
         <h3>Vincular el celular</h3>
         <button class="icon-btn sm" type="button" data-close-dialog aria-label="Cerrar"><i data-icon="x" data-size="18"></i></button>
       </div>
-      <p class="hint">Abrí la cámara del celular y apuntá a este código. Se abre la Bitácora ya conectada a la biblioteca y con la clave de Groq. Se hace una sola vez.</p>
+      <p class="hint">Abrí la cámara del celular y apuntá a este código. Se abre la Bitácora, pide la <strong>clave de acceso</strong> y queda conectada a la biblioteca (con la clave de Groq incluida). Se hace una sola vez.</p>
       <div id="qrBox" class="qr-box"></div>
       <div class="key-row">
         <input id="linkText" type="text" readonly />
         <button class="btn" type="button" id="btnCopyLink">Copiar</button>
       </div>
-      <p class="warn">Este código da acceso a toda la biblioteca: no lo compartas ni lo mandes por chat a otras personas.</p>
+      <p class="warn">El código está protegido con la clave de acceso, pero igual no lo compartas con otras personas.</p>
     </div>
   </dialog>
 

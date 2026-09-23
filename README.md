@@ -56,23 +56,21 @@ Una consulta de 1 h 20 min usa aprox. 1 h 20 min de audio y unos 50 a 60 mil tok
 2. Al terminar, Zoom deja una carpeta con `audio<números>.m4a` (las dos voces juntas) y un video. Se arrastra la carpeta a la app: usa el audio e ignora el video, y separa las dos voces por cómo suenan.
 3. Opcional: en Zoom → Configuración → **Grabación**, activar **"Grabar un archivo de audio separado para cada participante"** y poner en la app el **nombre con el que aparece en Zoom**. Así la transcripción sale con cada voz identificada.
 
-### 3. Publicar en GitHub Pages
-1. Crear un repositorio en GitHub (puede ser privado solo con GitHub Pro; si es público, no hay problema: no contiene datos ni claves).
-2. Subir estos archivos:
-   ```bash
-   git remote add origin https://github.com/USUARIO/bitacora-consultas.git
-   git push -u origin main
-   ```
-3. En GitHub: **Settings → Pages → Source: Deploy from a branch → main / (root)**.
-4. La app queda en `https://USUARIO.github.io/bitacora-consultas/`.
-5. En el celular, abrir ese link en Chrome → menú → **Agregar a pantalla principal**.
+### 3. La app publicada y la clave de acceso
+La app está en **https://antiscio.github.io/bitacora-consultas/** (GitHub Pages). El código es público, pero **la app no abre sin la clave de acceso**:
+
+- La clave de Groq, el permiso de GitHub y la llave de la biblioteca se guardan en cada dispositivo **encriptados con la clave de acceso** (PBKDF2 + AES-GCM). Sin la clave no se puede entrar.
+- Quien abra el link sin estar vinculado ve solo un aviso: "Esta app es privada".
+- El enlace/QR para vincular otro dispositivo también va encriptado con la clave: sin ella no sirve.
+- En cada dispositivo se puede marcar "Recordar por 30 días". En Configuración → Clave de acceso: **Bloquear ahora** y **Cambiar clave**.
+- Para instalarla en el celular: abrir el link en Chrome → menú → **Agregar a pantalla principal**.
 
 ### 4. Biblioteca en la nube (compu y celular)
 La biblioteca se puede sincronizar con un **repositorio privado de GitHub solo de datos** (ej. `antiscio/bitacora-datos`). Todo se **encripta en el navegador** (AES-GCM de 256 bits) antes de subirse: en GitHub solo quedan archivos ilegibles con nombres al azar. La llave vive únicamente en los dispositivos vinculados.
 
 1. Crear un permiso ("fine-grained token") en <https://github.com/settings/personal-access-tokens/new>: acceso **solo** al repositorio de datos, permiso **Contents: Read and write**, vencimiento lo más largo posible.
 2. En la app: **Configuración → Biblioteca en la nube** → repositorio + permiso → **Conectar**.
-3. Para el celular: **Vincular celular** muestra un código QR. Se escanea con la cámara del celular y la app queda conectada (incluye la clave de Groq). Se hace una sola vez por dispositivo.
+3. Para el celular (u otra compu): **Vincular celular** muestra un código QR y un enlace. Se abre en el otro dispositivo, se ingresa la clave de acceso y queda conectado (incluye la clave de Groq). Se hace una sola vez por dispositivo.
 
 Sincroniza sola al abrir la app, al volver a ella, cada 5 minutos y después de cada cambio. Si se edita lo mismo en dos dispositivos, gana la versión más reciente.
 
@@ -97,6 +95,7 @@ y abrir <http://localhost:8765>.
 | `js/views/sesion.js` | Consulta guardada: resumen, tránsitos y fechas, transcripción, notas, descargas |
 | `js/db.js` | Biblioteca en IndexedDB y respaldo |
 | `js/cloud.js` | Biblioteca en la nube: encriptación y sincronización con un repositorio privado |
+| `js/lock.js` | Candado: clave de acceso, secretos encriptados y enlace de vinculación |
 | `js/settings.js` | Configuración (clave, nombres, modelos) |
 | `js/ui.js` | Utilidades de interfaz (íconos, fechas, avisos) |
 | `js/files.js` | Recibe carpetas/archivos y adivina orden y voces |

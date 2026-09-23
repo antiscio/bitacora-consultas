@@ -4,19 +4,20 @@
 // quedan archivos ilegibles con nombres al azar. La llave nunca sale de los
 // dispositivos vinculados (viaja en el código QR de vinculación).
 
-import { prefs } from './ui.js';
 import * as db from './db.js';
+import { getSecret, setSecret, linkPayload } from './lock.js';
 
-const KEY = 'bitacora.nube';
 const API = 'https://api.github.com/repos/';
+export const PUBLIC_URL = 'https://antiscio.github.io/bitacora-consultas/';
 const CHECK_PATH = 'datos/llave.json';
 const STORES = ['patients', 'sessions'];
 
-export const getCloud = () => prefs.get(KEY, null);
-const setCloud = (c) => (c ? prefs.set(KEY, c) : prefs.del(KEY));
+// La configuración (repositorio, permiso y llave) vive en la bóveda encriptada (lock.js).
+export const getCloud = () => getSecret('cloud');
+const setCloud = (c) => setSecret('cloud', c || null);
 
-let status = { state: getCloud() ? 'idle' : 'off', at: null, message: '' };
-export const cloudStatus = () => status;
+let status = { state: 'idle', at: null, message: '' };
+export const cloudStatus = () => (getCloud() ? status : { state: 'off', at: null, message: '' });
 function setStatus(s) {
   status = { ...status, ...s };
   window.dispatchEvent(new CustomEvent('bitacora:nube', { detail: status }));
@@ -130,32 +131,23 @@ export async function connect({ repo, token, key }) {
     c.key ||= newLibraryKey();
     await writeFile(c, CHECK_PATH, await encrypt({ bitacora: true, creada: new Date().toISOString() }, c.key));
   }
-  setCloud(c);
+  await setCloud(c);
   setStatus({ state: 'idle', message: '' });
   return c;
 }
 
-export function disconnect() {
-  setCloud(null);
+export async function disconnect() {
+  await setCloud(null);
   setStatus({ state: 'off', at: null, message: '' });
 }
 
-// Código para vincular otro dispositivo: lleva el acceso a la biblioteca y la clave de Groq.
-export function linkUrl(groqKey) {
-  const c = getCloud();
-  const payload = btoa(JSON.stringify({ r: c.repo, t: c.token, k: c.key, g: groqKey || '' })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  return `${location.origin}${location.pathname}#vincular=${payload}`;
-}
-
-export function readLink(hash) {
-  const m = hash.match(/#vincular=([\w-]+)/);
-  if (!m) return null;
-  try {
-    const j = JSON.parse(atob(m[1].replace(/-/g, '+').replace(/_/g, '/')));
-    return { repo: j.r, token: j.t, key: j.k, groqKey: j.g };
-  } catch {
-    return null;
-  }
+// Enlace para vincular otro dispositivo: lleva los secretos encriptados con la
+// clave de acceso (sin la clave no sirve).
+export async function linkUrl() {
+  // Desde una prueba local, el enlace apunta igual a la app publicada.
+  const local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  const base = local ? PUBLIC_URL : `${location.origin}${location.pathname}`;
+  return `${base}#vincular=${await linkPayload()}`;
 }
 
 // ---------- Sincronizar ----------

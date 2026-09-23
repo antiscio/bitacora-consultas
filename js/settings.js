@@ -4,19 +4,32 @@ import { $, prefs, toast, download } from './ui.js';
 import { GroqClient } from './groq.js';
 import { exportAll, importAll } from './db.js';
 import { getCloud, connect, disconnect, sync, linkUrl, cloudStatus, startAutoSync } from './cloud.js';
+import { getSecret, setSecret, lockNow, changePassword } from './lock.js';
 
 const KEY = 'bitacora.settings';
 const DEFAULTS = { groqKey: '', name: 'Astróloga', zoomName: '', stt: 'whisper-large-v3', llm: 'openai/gpt-oss-120b' };
 
-let settings = { ...DEFAULTS, ...prefs.get(KEY, {}) };
+let settings = { ...DEFAULTS, ...prefs.get(KEY, {}), groqKey: '' };
 const listeners = new Set();
 
 export const getSettings = () => settings;
 export const onSettingsChange = (fn) => listeners.add(fn);
 
-export function updateSettings(patch) {
+// La clave de Groq no se guarda con el resto: va a la bóveda encriptada (lock.js).
+function store() {
+  const { groqKey, ...rest } = settings;
+  prefs.set(KEY, rest);
+}
+
+// Después de abrir el candado: traer la clave de Groq de la bóveda.
+export function loadSecrets() {
+  settings = { ...settings, groqKey: getSecret('groqKey') || '' };
+}
+
+export async function updateSettings(patch) {
   settings = { ...settings, ...patch };
-  prefs.set(KEY, settings);
+  store();
+  if ('groqKey' in patch) await setSecret('groqKey', settings.groqKey);
   listeners.forEach((fn) => fn(settings));
 }
 
@@ -48,7 +61,7 @@ export function refreshCloudUi() {
 }
 
 async function showLinkQr() {
-  const url = linkUrl(settings.groqKey);
+  const url = await linkUrl();
   $('linkText').value = url;
   const box = $('qrBox');
   box.textContent = 'Generando código…';
@@ -110,18 +123,33 @@ export function initSettings() {
     }
   });
 
-  $('settings').addEventListener('close', () => {
+  $('settings').addEventListener('close', async () => {
     if ($('settings').returnValue !== 'save') return;
-    settings = {
+    await updateSettings({
       groqKey: $('setKey').value.trim(),
       name: $('setName').value.trim() || DEFAULTS.name,
       zoomName: $('setZoomName').value.trim(),
       stt: $('setStt').value,
       llm: $('setLlm').value.trim() || DEFAULTS.llm,
-    };
-    prefs.set(KEY, settings);
-    listeners.forEach((fn) => fn(settings));
+    });
     toast('Configuración guardada');
+  });
+
+  $('btnLockNow').addEventListener('click', lockNow);
+  $('btnChangePass').addEventListener('click', async () => {
+    const err = $('passError');
+    err.hidden = true;
+    const [a, b, c] = ['passOld', 'passNew', 'passNew2'].map((id) => $(id).value);
+    try {
+      if (b.length < 8) throw new Error('La clave nueva tiene que tener al menos 8 caracteres.');
+      if (b !== c) throw new Error('Las dos claves nuevas no coinciden.');
+      await changePassword(a, b);
+      ['passOld', 'passNew', 'passNew2'].forEach((id) => ($(id).value = ''));
+      toast('Clave de acceso cambiada. Los otros dispositivos siguen con la anterior hasta volver a vincularlos.');
+    } catch (e) {
+      err.textContent = e.message;
+      err.hidden = false;
+    }
   });
 
   $('btnCloudConnect').addEventListener('click', async () => {
@@ -152,8 +180,8 @@ export function initSettings() {
       $('linkText').select();
     }
   });
-  $('btnCloudOff').addEventListener('click', () => {
-    disconnect();
+  $('btnCloudOff').addEventListener('click', async () => {
+    await disconnect();
     refreshCloudUi();
     toast('Este dispositivo ya no sincroniza (la biblioteca queda guardada acá y en la nube).');
   });
