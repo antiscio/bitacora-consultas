@@ -173,12 +173,14 @@ export function initSettings() {
   $('btnCloudSync').addEventListener('click', () => sync());
   $('btnCloudLink').addEventListener('click', showLinkQr);
   $('btnCopyLink').addEventListener('click', async () => {
+    const input = $('linkText');
     try {
-      await navigator.clipboard.writeText($('linkText').value);
-      toast('Enlace copiado');
+      await navigator.clipboard.writeText(input.value);
     } catch {
-      $('linkText').select();
+      input.select();
+      document.execCommand('copy');
     }
+    toast('Enlace copiado: pegalo en la app, en el otro navegador o dispositivo');
   });
   $('btnCloudOff').addEventListener('click', async () => {
     await disconnect();

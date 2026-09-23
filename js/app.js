@@ -43,8 +43,34 @@ function askPassword({ message, create = false, action }) {
   });
 }
 
+// Pantalla para quien no está vinculado: pegar el enlace de vinculación.
+function waitForLink() {
+  $('lockMsg').textContent = 'Esta app es privada. Para usarla en este dispositivo, pegá el enlace de vinculación (o escaneá el código QR) que se genera en un dispositivo que ya la use.';
+  $('linkForm').hidden = false;
+  return new Promise((resolve) => {
+    // Si el enlace llega a esta misma pestaña, el navegador no recarga la página.
+    window.addEventListener('hashchange', () => {
+      const p = readLinkPayload(location.hash);
+      if (p) resolve(p);
+    });
+    $('linkForm').onsubmit = (e) => {
+      e.preventDefault();
+      const p = readLinkPayload('#' + ($('linkPaste').value.split('#')[1] || ''));
+      if (p) resolve(p);
+      else {
+        $('linkError').textContent = 'Ese no es un enlace de vinculación. Copialo completo (es largo) desde Configuración → Vincular celular.';
+        $('linkError').hidden = false;
+      }
+    };
+  }).then((p) => {
+    $('linkForm').hidden = true;
+    return p;
+  });
+}
+
 async function gate() {
-  const link = readLinkPayload(location.hash);
+  let link = readLinkPayload(location.hash);
+  if (!link && !hasVault() && !legacySecrets() && location.hash !== '#primera-vez') link = await waitForLink();
   if (link) {
     await askPassword({
       message: 'Para vincular este dispositivo a la Bitácora, ingresá la clave de acceso.',
@@ -64,9 +90,6 @@ async function gate() {
       create: true,
       action: (pw, remember) => createVault(pw, legacy || {}, { remember }),
     });
-  } else {
-    $('lockMsg').textContent = 'Esta app es privada. Para usarla en este dispositivo, escaneá el código QR de vinculación desde un dispositivo que ya la use.';
-    return new Promise(() => {}); // queda bloqueada
   }
   if (/^#(vincular=|primera-vez)/.test(location.hash)) history.replaceState(null, '', location.pathname + '#/nueva');
   $('lockPass').value = $('lockPass2').value = '';

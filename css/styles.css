@@ -683,13 +683,13 @@ dialog.confirm p { margin: 0; }
 .lock-card h1 { color: #fff; font-size: 2.4rem; margin-top: 16px; }
 .lock-sub { margin: 2px 0 0; color: var(--night-muted); letter-spacing: 0.08em; font-size: 0.85rem; }
 .lock-msg { color: #e6e1ff; margin: 26px 0 18px; line-height: 1.55; }
-#lockForm { width: 100%; display: flex; flex-direction: column; gap: 12px; }
-#lockForm input[type="password"] { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.25); color: #fff; text-align: center; font-size: 1.05rem; }
-#lockForm input[type="password"]::placeholder { color: var(--night-muted); }
-#lockForm input:focus { box-shadow: 0 0 0 4px rgba(240, 201, 121, 0.2); border-color: var(--star-gold); }
+#lockForm, #linkForm { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+#lockForm input[type="password"], #linkForm input { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.25); color: #fff; text-align: center; font-size: 1.05rem; }
+#lockForm input[type="password"]::placeholder, #linkForm input::placeholder { color: var(--night-muted); }
+#lockForm input:focus, #linkForm input:focus { box-shadow: 0 0 0 4px rgba(240, 201, 121, 0.2); border-color: var(--star-gold); }
 #lockForm .check { color: var(--night-muted); text-align: left; font-size: 0.86rem; }
-#lockForm .btn { width: 100%; }
-#lockForm .error { background: rgba(255, 120, 110, 0.16); color: #ffd4cf; }
+#lockForm .btn, #linkForm .btn { width: 100%; }
+#lockForm .error, #linkForm .error { background: rgba(255, 120, 110, 0.16); color: #ffd4cf; }
 .pass-grid { margin: 12px 0; }
 
 /* ---------- Biblioteca en la nube ---------- */

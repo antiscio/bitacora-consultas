@@ -21,6 +21,11 @@
       <h1>Bitácora</h1>
       <p class="lock-sub">de consultas</p>
       <p id="lockMsg" class="lock-msg">Cargando…</p>
+      <form id="linkForm" hidden>
+        <input id="linkPaste" type="text" autocomplete="off" placeholder="Pegá acá el enlace de vinculación" />
+        <button class="btn gold xl" type="submit">Continuar</button>
+        <p id="linkError" class="error" hidden></p>
+      </form>
       <form id="lockForm" hidden>
         <input id="lockPass" type="password" autocomplete="current-password" placeholder="Clave de acceso" />
         <input id="lockPass2" type="password" autocomplete="new-password" placeholder="Repetí la clave" hidden />
